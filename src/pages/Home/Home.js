@@ -32,6 +32,15 @@ console.log("Token in production:", token);
 
   const fetchUserDetails = async () => {
     try {
+
+      if (!token) {
+        console.error("No token found, cannot fetch user details");
+        handleLogout(); // If no token, log out
+        return;
+      }
+
+
+
       const response = await fetch(summaryApi.userDetails.url, {
         method: summaryApi.userDetails.method,
         credentials: 'include',
@@ -41,6 +50,7 @@ console.log("Token in production:", token);
         }
       });
         
+      console.log("homme token", response)
       if (!response.ok) {
         if (response.status === 401) {
           console.log('Unauthorized access - token may be invalid');
@@ -54,6 +64,7 @@ console.log("Token in production:", token);
       
       if (responseData.success && responseData.data) {
         const userData = responseData.data.data || responseData.data;
+        console.log("Redux UserDetails:", userData);
         if (userData) {
           dispatch(setUser({
             _id: userData._id || '',
