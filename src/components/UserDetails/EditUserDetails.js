@@ -34,7 +34,7 @@ function EditUserDetails({ onClose, user }) {
   const uploadPicRef = useRef();
 
    const token = useMemo(() => localStorage.getItem('token'), []);
-  console.log("Token in production:", token); 
+  console.log("Token in Edit user:", token); 
 
 
   const validateUrl = (url) => {
@@ -192,7 +192,7 @@ function EditUserDetails({ onClose, user }) {
         method: summaryApi.updateUser.method,
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
+          // "Content-Type": "application/json",
           'Authorization': token
         },
         body: JSON.stringify(updatedData),
