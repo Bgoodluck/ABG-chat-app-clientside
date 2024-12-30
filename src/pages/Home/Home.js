@@ -36,11 +36,11 @@ console.log("Token in production:", token);
         method: summaryApi.userDetails.method,
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+          // 'Content-Type': 'application/json',
           'Authorization': token // Remove 'Bearer ' prefix if not expected by backend
         }
       });
-  
+        
       if (!response.ok) {
         if (response.status === 401) {
           console.log('Unauthorized access - token may be invalid');
