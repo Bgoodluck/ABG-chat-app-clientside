@@ -44,7 +44,7 @@ console.log("Token in production:", token);
       if (!response.ok) {
         if (response.status === 401) {
           console.log('Unauthorized access - token may be invalid');
-          handleLogout();
+          // handleLogout();
           return;
         }
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -66,12 +66,12 @@ console.log("Token in production:", token);
         }
       } else {
         console.error("Invalid response format:", responseData);
-        handleLogout();
+        // handleLogout();
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
       if (error.message.includes('401')) {
-        handleLogout();
+        // handleLogout();
       }
     }
   };
