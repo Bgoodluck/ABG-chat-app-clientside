@@ -1,4 +1,4 @@
-const backendUrl = process.env.REACT_APP_BACKEND_URL;
+const backendUrl = "https://abg-chat-app-serverside.onrender.com" || process.env.REACT_APP_BACKEND_URL;
 
 
 export const summaryApi = {

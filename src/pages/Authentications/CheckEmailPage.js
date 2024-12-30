@@ -47,6 +47,7 @@ function CheckEmailPage() {
     try {
         const response = await fetch(summaryApi.email.url, {
             method: summaryApi.email.method,
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
