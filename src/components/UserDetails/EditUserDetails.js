@@ -191,7 +191,7 @@ function EditUserDetails({ onClose, user }) {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          'Authorization': token
         },
         body: JSON.stringify(updatedData),
       });
