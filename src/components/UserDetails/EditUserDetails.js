@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import Avatar from "../UsersAvatar/Avatar";
 import uploadFile from "../../helpers/uploadFile";
@@ -33,6 +33,8 @@ function EditUserDetails({ onClose, user }) {
 
   const uploadPicRef = useRef();
 
+   const token = useMemo(() => localStorage.getItem('token'), []);
+  console.log("Token in production:", token); 
 
 
   const validateUrl = (url) => {
@@ -219,7 +221,7 @@ function EditUserDetails({ onClose, user }) {
     }
   };
 
-  
+
   
 
   return (
