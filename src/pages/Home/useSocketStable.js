@@ -360,42 +360,57 @@ export const useSocketStable = (token) => {
     reconnection: true,
     reconnectionAttempts: maxReconnectAttempts,
     reconnectionDelay: baseReconnectDelay,
-    timeout: 20000, // Increased timeout
-    transports: ['websocket', 'polling'],
+    timeout: 30000, // Increased timeout
+    transports: ['websocket'],
     autoConnect: false,
-    forceNew: false
+    forceNew: true, // Force new connection
+    path: '/socket.io/', // Explicit path
+    query: { token } // Add token to query params as backup
   }), [token]);
 
   // Create stable socket instance
   const socket = useMemo(() => {
-    if (!token) return null;
-    
-    if (!socketRef.current) {
-      console.log('Creating new socket instance');
-      socketRef.current = io(process.env.REACT_APP_BACKEND_URL, socketConfig);
-      
-      // Add to window immediately
-      window.socket = socketRef.current;
+    if (!token) {
+      console.log('No token available for socket connection');
+      return null;
     }
-    return socketRef.current;
+    
+    try {
+      if (!socketRef.current) {
+        console.log('Creating new socket instance');
+        socketRef.current = io(process.env.REACT_APP_BACKEND_URL, socketConfig);
+        window.socket = socketRef.current;
+      }
+      return socketRef.current;
+    } catch (error) {
+      console.error('Error creating socket:', error);
+      return null;
+    }
   }, [token, socketConfig]);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !token) return;
 
     let reconnectTimeout;
+    let isSubscribed = true;
 
     const handleConnect = () => {
+      if (!isSubscribed) return;
+      
       console.log('Socket connected successfully');
       dispatch(setSocketConnection(true));
       reconnectAttemptsRef.current = 0;
       
-      // Initialize data fetching
-      socket.emit("fetch-all-users");
-      socket.emit("fetch-message-history", {
-        page: 1,
-        limit: 50
-      });
+      // Initialize data fetching with error handling
+      try {
+        socket.emit("fetch-all-users");
+        socket.emit("fetch-message-history", {
+          page: 1,
+          limit: 50
+        });
+      } catch (error) {
+        console.error('Error initializing socket data:', error);
+      }
     };
 
     const handleConnectError = (error) => {
@@ -465,11 +480,14 @@ export const useSocketStable = (token) => {
 
     // Cleanup function
     return () => {
+      isSubscribed = false;
       clearTimeout(reconnectTimeout);
       if (socket) {
         socket.removeAllListeners();
-        // Don't disconnect on cleanup - maintain connection
-        window.socket = socket; // Ensure global reference is maintained
+        // Don't disconnect on cleanup unless component is unmounting
+        if (socket.connected && !window.socket) {
+          socket.disconnect();
+        }
       }
     };
   }, [socket, dispatch, navigate]);

@@ -8,7 +8,7 @@ import logo from '../../asset/logo2.png';
 import { useSocketStable } from './useSocketStable';
 
 // Disable React.StrictMode double-invocation in development
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === 'production') {
   const originalConsoleError = console.error;
   console.error = (...args) => {
     if (args[0]?.includes('StrictMode')) return;
@@ -36,12 +36,18 @@ console.log("Token in production:", token);
         method: summaryApi.userDetails.method,
         credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json',
+          'Authorization': token // Remove 'Bearer ' prefix if not expected by backend
         }
       });
-
+  
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        if (response.status === 401) {
+          console.log('Unauthorized access - token may be invalid');
+          handleLogout();
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const responseData = await response.json();
@@ -54,38 +60,60 @@ console.log("Token in production:", token);
             firstName: userData.firstName || '',
             lastName: userData.lastName || '',
             email: userData.email || '',
-            picture: userData.picture || ''
+            picture: userData.picture || '',
+            token // Store token in user state
           }));
         }
-      }
-
-      if (responseData.data?.logout) {
+      } else {
+        console.error("Invalid response format:", responseData);
         handleLogout();
       }
-      
     } catch (error) {
       console.error("Error fetching user details:", error);
-      handleLogout();
+      if (error.message.includes('401')) {
+        handleLogout();
+      }
     }
   };
 
   const handleLogout = () => {
-    if (socket) {
-      socket.disconnect();
+    try {
+      if (socket?.connected) {
+        socket.disconnect();
+      }
+      localStorage.clear(); // Clear all storage instead of just token
+      dispatch(logout());
+      navigate('/email', { replace: true }); // Use replace to prevent back navigation
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Force a clean logout even if there's an error
+      localStorage.clear();
+      window.location.href = '/email';
     }
-    localStorage.removeItem('token');
-    dispatch(logout());
-    navigate('/email');
   };
 
+
   // Fetch user details on mount
-  useEffect(() => {
-    if (!token) {
-      handleLogout();
-      return;
+ useEffect(() => {
+  if (!token) {
+    handleLogout();
+    return;
+  }
+  
+  let isSubscribed = true;
+  
+  const initializeUser = async () => {
+    if (isSubscribed) {
+      await fetchUserDetails();
     }
-    fetchUserDetails();
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  };
+  
+  initializeUser();
+  
+  return () => {
+    isSubscribed = false;
+  };
+}, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Log socket and user state for debugging
   useEffect(() => {
