@@ -24,6 +24,8 @@ function Home() {
   
   // Create stable token reference
   const token = useMemo(() => localStorage.getItem('token'), []);
+console.log("Token in production:", token); 
+
   
   // Initialize socket with stable configuration
   const socket = useSocketStable(token);
